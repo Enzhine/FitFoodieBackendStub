@@ -365,9 +365,23 @@ def get_dish(id):
 @register_handler("dishProducts")
 def get_dish_products(id):
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
-    if not dish:
-        return jsonify({"error": "Dish not found"}), 404
-    return jsonify(dish["productIds"][1]), 200
+    if not dish or "productIds" not in dish or len(dish["productIds"]) < 2:
+        return jsonify({"error": "Invalid dish data"}), 404
+
+    product_ids = dish["productIds"][0]
+    quantities = dish["productIds"][1]
+
+    if len(product_ids) != len(quantities):
+        return jsonify({"error": "Mismatched product and quantity lengths"}), 400
+
+    result = []
+    for pid, qty in zip(product_ids, quantities):
+        result.append({
+            "productId": pid,
+            "quantity": qty
+        })
+
+    return jsonify(result), 200
 
 '''
 ОБНОВЛЕНИЕ ПИЩЕВЫХ ПРЕДПОЧТЕНИЙ
