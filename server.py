@@ -132,7 +132,7 @@ mock_dishes = [
         "id": 1,
         "name": "Курица с рисом",
         "description": "Питательное блюдо с курицей и гарниром из риса",
-        "productIds": [[1, 2], [3, 3]],
+        "productIds": [[1, 2], [300, 450]],
         "calories": 450,
         "cookMinutes": 30,
         "tags": ["MEAT"],
@@ -142,15 +142,17 @@ mock_dishes = [
             {"name": "Белки", "value": "35г"},
             {"name": "Жиры", "value": "20г"},
             {"name": "Углеводы", "value": "50г"},
+            {"name": "Калорий", "value": "450"},
+            {"name": "Время приготовления", "value": "30 минут"},
         ],
-        "recipe": "1. Отварить рис. 2. Обжарить курицу. 3. Смешать.",
+        "recipe": "1. Отварить рис.\n2. Обжарить курицу.\n3. Смешать.",
         "chefAdvice": "Используйте жасминовый рис для аромата."
     },
     {
         "id": 2,
         "name": "Сырный лосось",
         "description": "Сливочный лосось с сыром",
-        "productIds": [[3, 4], [3, 2]],
+        "productIds": [[3, 4], [150, 240]],
         "calories": 600,
         "cookMinutes": 20,
         "tags": ["FISH", "MILK"],
@@ -297,9 +299,9 @@ def get_dishes():
     query = request.args
     search = query.get("search", "").lower()
     min_cal = float(query.get("minCalories", 0))
-    max_cal = float(query.get("maxCalories", float("inf")))
+    max_cal = float(query.get("maxCalories", 100_000))
     min_time = int(query.get("minCookingTime", 0))
-    max_time = int(query.get("maxCookingTime", float("inf")))
+    max_time = int(query.get("maxCookingTime", 100_000))
     page = int(query.get("page", 0))
     size = int(query.get("size", 20))
 
@@ -340,7 +342,6 @@ def get_dishes():
 '''
 @register_handler("dish")
 def get_dish(id):
-    def get_dish(id):
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
     if not dish:
         return jsonify({"error": "Dish not found"}), 404
