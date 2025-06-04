@@ -137,7 +137,14 @@ mock_dishes = [
         "cookMinutes": 30,
         "tags": ["MEAT"],
         "order": 1,
-        "image": "rice.jpg"
+        "image": "rice.jpg",
+        "props": [
+            {"name": "Белки", "value": "35г"},
+            {"name": "Жиры", "value": "20г"},
+            {"name": "Углеводы", "value": "50г"},
+        ],
+        "recipe": "1. Отварить рис. 2. Обжарить курицу. 3. Смешать.",
+        "chefAdvice": "Используйте жасминовый рис для аромата."
     },
     {
         "id": 2,
@@ -148,7 +155,14 @@ mock_dishes = [
         "cookMinutes": 20,
         "tags": ["FISH", "MILK"],
         "order": 2,
-        "image": "salmon.jpg"
+        "image": "salmon.jpg",
+        "props": [
+            {"name": "Белки", "value": "45г"},
+            {"name": "Жиры", "value": "35г"},
+            {"name": "Углеводы", "value": "10г"},
+        ],
+        "recipe": "1. Запеките лосось. 2. Добавьте плавленый сыр. 3. Подавайте горячим.",
+        "chefAdvice": "Добавьте немного лимона для баланса вкуса."
     }
 ]
 
@@ -326,10 +340,24 @@ def get_dishes():
 '''
 @register_handler("dish")
 def get_dish(id):
+    def get_dish(id):
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
-    if dish:
-        return jsonify(dish), 200
-    return jsonify({"error": "Dish not found"}), 404
+    if not dish:
+        return jsonify({"error": "Dish not found"}), 404
+
+    dto = {
+        "id": dish["id"],
+        "name": dish["name"],
+        "calories": dish["calories"],
+        "cookMinutes": dish["cookMinutes"],
+        "tags": dish["tags"],
+        "order": dish.get("order", 1),
+        "props": dish.get("props", []),
+        "recipe": dish.get("recipe", ""),
+        "chefAdvice": dish.get("chefAdvice", "")
+    }
+
+    return jsonify(dto), 200
 
 '''
 ПОЛУЧЕНИЕ ПРОДУКТОВ БЛЮДА
