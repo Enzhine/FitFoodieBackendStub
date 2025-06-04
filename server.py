@@ -367,8 +367,7 @@ def get_dish_products(id):
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
     if not dish:
         return jsonify({"error": "Dish not found"}), 404
-    dish_products = [p for p in mock_products if p["id"] in dish["productIds"][0]]
-    return jsonify(dish_products), 200
+    return jsonify(dish["productIds"][1]), 200
 
 '''
 ОБНОВЛЕНИЕ ПИЩЕВЫХ ПРЕДПОЧТЕНИЙ
