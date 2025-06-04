@@ -133,21 +133,22 @@ mock_dishes = [
         "name": "Курица с рисом",
         "description": "Питательное блюдо с курицей и гарниром из риса",
         "productIds": [1, 2],
-        "image": "rice_chicken.jpg"
+        "calories": 450,
+        "cookMinutes": 30,
+        "tags": ["MEAT"],
+        "order": 1,
+        "image": "rice.jpg"
     },
     {
         "id": 2,
-        "name": "Лёгкий салат",
-        "description": "Салат из свежих овощей",
-        "productIds": [3],
-        "image": "salad.jpg"
-    },
-    {
-        "id": 3,
         "name": "Сырный лосось",
         "description": "Сливочный лосось с сыром",
         "productIds": [3, 4],
-        "image": "salmon_cheese.jpg"
+        "calories": 600,
+        "cookMinutes": 20,
+        "tags": ["FISH", "MILK"],
+        "order": 2,
+        "image": "salmon.jpg"
     }
 ]
 
@@ -279,8 +280,46 @@ def get_product_image(id):
 '''
 @register_handler("dishesAll")
 def get_dishes():
-    print("123")
-    return jsonify(mock_dishes), 200
+    query = request.args
+    search = query.get("search", "").lower()
+    min_cal = float(query.get("minCalories", 0))
+    max_cal = float(query.get("maxCalories", float("inf")))
+    min_time = int(query.get("minCookingTime", 0))
+    max_time = int(query.get("maxCookingTime", float("inf")))
+    page = int(query.get("page", 0))
+    size = int(query.get("size", 20))
+
+    filtered = []
+    for dish in mock_dishes:
+        if search and search not in dish["name"].lower():
+            continue
+        if not (min_cal <= dish["calories"] <= max_cal):
+            continue
+        if not (min_time <= dish["cookMinutes"] <= max_time):
+            continue
+        filtered.append(dish)
+
+    total_elements = len(filtered)
+    total_pages = (total_elements + size - 1) // size
+    start = page * size
+    end = start + size
+
+    content = [{
+        "id": d["id"],
+        "name": d["name"],
+        "calories": d["calories"],
+        "cookMinutes": d["cookMinutes"],
+        "tags": d["tags"],
+        "order": d["order"]
+    } for d in filtered[start:end]]
+
+    return jsonify({
+        "content": content,
+        "totalPages": total_pages,
+        "totalElements": total_elements,
+        "pageNumber": page,
+        "pageSize": size
+    }), 200
 
 '''
 ПОЛУЧЕНИЕ БЛЮДА
@@ -323,6 +362,49 @@ def update_preferences():
 
     return jsonify({"message": "Preferences updated"}), 200
 
+'''
+ПОЛУЧАЕМ БЛЮДА ПО СТРАНИЧКАМ
+'''
+@register_handler("dishesSuggest")
+def suggest_dishes():
+    request_data = request.json or []
+
+    available = {item["productId"]: item["quantity"] for item in request_data}
+
+    result = []
+    for dish in mock_dishes:
+        required = {}
+        for pid in dish["productIds"]:
+            product = next((p for p in mock_products if p["id"] == pid), None)
+            if not product:
+                continue
+            required[pid] = product["quant"]
+
+        missing = 0
+        possible = float("inf")
+        for pid, needed in required.items():
+            have = available.get(pid, 0)
+            if have < needed:
+                missing += needed - have
+            else:
+                possible = min(possible, have // needed)
+
+        dish_copy = {
+            "id": dish["id"],
+            "name": dish["name"],
+            "calories": dish["calories"],
+            "cookMinutes": dish["cookMinutes"],
+            "tags": dish["tags"]
+        }
+
+        if missing > 0:
+            dish_copy["order"] = -missing
+        else:
+            dish_copy["order"] = possible
+
+        result.append(dish_copy)
+
+    return jsonify(result), 200
 
 # --- Генерация маршрутов
 for path, methods in spec.get("paths", {}).items():
