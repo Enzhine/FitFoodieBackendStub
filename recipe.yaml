@@ -282,7 +282,6 @@ components:
                 properties:
                   name: { type: string }
                   value: { type: string }
-            properties: { type: string }
             recipe: { type: string }
             chefAdvice: { type: string }
 
