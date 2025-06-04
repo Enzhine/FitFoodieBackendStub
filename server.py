@@ -132,7 +132,7 @@ mock_dishes = [
         "id": 1,
         "name": "Курица с рисом",
         "description": "Питательное блюдо с курицей и гарниром из риса",
-        "productIds": [1, 2],
+        "productIds": [[1, 2], [3, 3]],
         "calories": 450,
         "cookMinutes": 30,
         "tags": ["MEAT"],
@@ -150,7 +150,7 @@ mock_dishes = [
         "id": 2,
         "name": "Сырный лосось",
         "description": "Сливочный лосось с сыром",
-        "productIds": [3, 4],
+        "productIds": [[3, 4], [3, 2]],
         "calories": 600,
         "cookMinutes": 20,
         "tags": ["FISH", "MILK"],
@@ -367,7 +367,7 @@ def get_dish_products(id):
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
     if not dish:
         return jsonify({"error": "Dish not found"}), 404
-    dish_products = [p for p in mock_products if p["id"] in dish["productIds"]]
+    dish_products = [p for p in mock_products if p["id"] in dish["productIds"][0]]
     return jsonify(dish_products), 200
 
 '''
@@ -402,7 +402,7 @@ def suggest_dishes():
     result = []
     for dish in mock_dishes:
         required = {}
-        for pid in dish["productIds"]:
+        for pid in dish["productIds"][0]:
             product = next((p for p in mock_products if p["id"] == pid), None)
             if not product:
                 continue
