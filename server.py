@@ -175,6 +175,19 @@ for f_name in os.listdir(images_dir):
     with open(images_dir+'/'+f_name, mode='rb') as file:
         images[f_name] = file.read()
 
+
+def is_dish_allowed(dish, user):
+    if not user:
+        return True
+    for tag in dish.get("tags", []):
+        if tag == "MEAT" and user.get("meatPreference") == "EXCL":
+            return False
+        if tag == "FISH" and user.get("fishPreference") == "EXCL":
+            return False
+        if tag == "MILK" and user.get("milkPreference") == "EXCL":
+            return False
+    return True
+
 '''
 ПОЛУЧЕНИЕ ИЗОБРАЖЕНИЯ ПРОДУКТА
 '''
@@ -297,6 +310,8 @@ def get_product_image(id):
 @register_handler("dishesAll")
 def get_dishes():
     query = request.args
+    user = get_authenticated_user()
+
     search = query.get("search", "").lower()
     min_cal = float(query.get("minCalories", 0))
     max_cal = float(query.get("maxCalories", 100_000))
@@ -307,6 +322,8 @@ def get_dishes():
 
     filtered = []
     for dish in mock_dishes:
+        if not is_dish_allowed(dish, user):
+            continue
         if search and search not in dish["name"].lower():
             continue
         if not (min_cal <= dish["calories"] <= max_cal):
@@ -326,7 +343,7 @@ def get_dishes():
         "calories": d["calories"],
         "cookMinutes": d["cookMinutes"],
         "tags": d["tags"],
-        "order": d["order"]
+        "order": d.get("order", 1)
     } for d in filtered[start:end]]
 
     return jsonify({
@@ -410,11 +427,15 @@ def update_preferences():
 @register_handler("dishesSuggest")
 def suggest_dishes():
     request_data = request.json or []
+    user = get_authenticated_user()
 
     available = {item["productId"]: item["quantity"] for item in request_data}
-
     result = []
+
     for dish in mock_dishes:
+        if not is_dish_allowed(dish, user):
+            continue
+
         required = {}
         for pid in dish["productIds"][0]:
             product = next((p for p in mock_products if p["id"] == pid), None)
@@ -439,11 +460,7 @@ def suggest_dishes():
             "tags": dish["tags"]
         }
 
-        if missing > 0:
-            dish_copy["order"] = -missing
-        else:
-            dish_copy["order"] = possible
-
+        dish_copy["order"] = -missing if missing > 0 else possible
         result.append(dish_copy)
 
     return jsonify(result), 200
