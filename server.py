@@ -438,30 +438,25 @@ def suggest_dishes():
     for dish in mock_dishes:
         if not is_dish_allowed(dish, user):
             continue
-        required = {}
-        for pid in dish["productIds"][0]:
-            product = next((p for p in mock_products if p["id"] == pid), None)
-            if not product:
-                continue
-            required[pid] = product["quant"]
 
         missing = 0
         possible = float("inf")
 
-        for pid, needed in required.items():
+        for pid, needed in zip(dish["productIds"][0], dish["productIds"][1]):
             have = available.get(pid, 0)
             if have < needed:
                 missing += needed - have
             else:
                 possible = min(possible, have // needed)
+
         dish_copy = {
             "id": dish["id"],
             "name": dish["name"],
             "calories": dish["calories"],
             "cookMinutes": dish["cookMinutes"],
-            "tags": dish["tags"]
+            "tags": dish["tags"],
+            "order": -missing if missing > 0 else possible
         }
-        dish_copy["order"] = -missing if missing > 0 else possible
 
         result.append(dish_copy)
 
