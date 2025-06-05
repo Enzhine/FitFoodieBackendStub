@@ -137,7 +137,7 @@ mock_dishes = [
         "cookMinutes": 30,
         "tags": ["MEAT"],
         "order": 1,
-        "image": "rice.jpg",
+        "image": "rice_chicken.jpg",
         "props": [
             {"name": "Белки", "value": "35г"},
             {"name": "Жиры", "value": "20г"},
@@ -157,7 +157,7 @@ mock_dishes = [
         "cookMinutes": 20,
         "tags": ["FISH", "MILK"],
         "order": 2,
-        "image": "salmon.jpg",
+        "image": "salmon_cheese.jpg",
         "props": [
             {"name": "Белки", "value": "45г"},
             {"name": "Жиры", "value": "35г"},
@@ -203,9 +203,12 @@ def get_product_image(id: int):
 '''
 @register_handler("dishImage")
 def get_dish_image(id):
+    print('123!!!')
     dish = next((d for d in mock_dishes if str(d["id"]) == str(id)), None)
     if dish and dish["image"] in images:
+        print(dish, dish["image"])
         return images[dish["image"]]
+    print('!!!321')
     return jsonify({"error": "Image not found"}), 404
 
 '''
