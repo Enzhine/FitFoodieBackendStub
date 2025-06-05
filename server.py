@@ -438,7 +438,6 @@ def suggest_dishes():
     for dish in mock_dishes:
         if not is_dish_allowed(dish, user):
             continue
-
         required = {}
         for pid in dish["productIds"][0]:
             product = next((p for p in mock_products if p["id"] == pid), None)
@@ -448,13 +447,13 @@ def suggest_dishes():
 
         missing = 0
         possible = float("inf")
+
         for pid, needed in required.items():
             have = available.get(pid, 0)
             if have < needed:
                 missing += needed - have
             else:
                 possible = min(possible, have // needed)
-
         dish_copy = {
             "id": dish["id"],
             "name": dish["name"],
@@ -462,8 +461,8 @@ def suggest_dishes():
             "cookMinutes": dish["cookMinutes"],
             "tags": dish["tags"]
         }
-
         dish_copy["order"] = -missing if missing > 0 else possible
+
         result.append(dish_copy)
 
     return jsonify(result), 200
